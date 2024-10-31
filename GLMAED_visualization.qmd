@@ -1,0 +1,154 @@
+---
+title: "GLM calibration code"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+library(ggplot2)
+```
+
+You can add options to executable code like this
+
+```{r temperature checks}
+
+#get just the 1m field data:
+#historical <- read.csv("./field_data/historicalbuoytemp.csv")
+temp0p5m_daily <- read.csv("./field_data/temp0p5m_daily.csv")
+temp5.5m_daily <- read.csv("./field_data/temp5.5m_daily.csv")
+temp9.5m_daily <- read.csv("./field_data/temp9.5m_daily.csv")
+temp1m_daily <- read.csv("./field_data/temp1m_daily.csv")
+# temp_1m_exact <- historical %>% filter(depth == 1)
+
+# temp_1m_exact_daily <- temp1m_daily %>% 
+#   mutate(doy = yday(datetime)) %>% 
+#   mutate(hour = hour(datetime)) %>% 
+#   mutate(year = year(datetime)) %>% 
+#   mutate(day = date(datetime)) %>% 
+#   mutate(minute = minute(datetime)) %>% 
+#   group_by(day) %>% 
+#   mutate(daily_mean_temp = mean(temperature)) %>% 
+#   mutate(temp_1 = daily_mean_temp) %>% 
+#   mutate(DateTime = datetime) %>% 
+#   filter(hour == 12) %>% 
+#   filter(minute == 0) %>% 
+#   select(DateTime, daily_mean_temp, temp_1) 
+# 
+# temp_0p5m_exact <- historical %>% filter(depth == 0.5)
+# 
+# temp_0p5m_exact_daily <- temp_0p5m_exact %>% 
+#   mutate(doy = yday(datetime)) %>% 
+#   mutate(hour = hour(datetime)) %>% 
+#   mutate(year = year(datetime)) %>% 
+#   mutate(day = date(datetime)) %>% 
+#   mutate(minute = minute(datetime)) %>% 
+#   group_by(day) %>% 
+#   mutate(daily_mean_temp = mean(temperature)) %>% 
+#   mutate(temp_0.5 = daily_mean_temp) %>% 
+#   mutate(DateTime = datetime) %>% 
+#   filter(hour == 12) %>% 
+#   filter(minute == 0) %>% 
+#   select(DateTime, daily_mean_temp, temp_0.5) 
+#   
+# temp_5.5m_exact <- historical %>% filter(depth == 5.5)
+# temp_5.5m_exact_daily <- temp_5.5m_exact %>% 
+#   mutate(doy = yday(datetime)) %>% 
+#   mutate(hour = hour(datetime)) %>% 
+#   mutate(year = year(datetime)) %>% 
+#   mutate(day = date(datetime)) %>% 
+#   mutate(minute = minute(datetime)) %>% 
+#   group_by(day) %>% 
+#   mutate(daily_mean_temp = mean(temperature)) %>% 
+#   mutate(temp_5.5 = daily_mean_temp) %>% 
+#   mutate(DateTime = datetime) %>% 
+#   filter(hour == 12) %>% 
+#   filter(minute == 0) %>% 
+#   select(DateTime, daily_mean_temp, temp_5.5) 
+# 
+# temp_9.5m_exact <- historical %>% filter(depth == 9.5)
+# temp_9.5m_exact_daily <- temp_9.5m_exact %>% 
+#   mutate(doy = yday(datetime)) %>% 
+#   mutate(hour = hour(datetime)) %>% 
+#   mutate(year = year(datetime)) %>% 
+#   mutate(day = date(datetime)) %>% 
+#   mutate(minute = minute(datetime)) %>% 
+#   group_by(day) %>% 
+#   mutate(daily_mean_temp = mean(temperature)) %>% 
+#   mutate(temp_9.5 = daily_mean_temp) %>% 
+#   mutate(DateTime = datetime) %>% 
+#   filter(hour == 12) %>% 
+#   filter(minute == 0) %>% 
+#   select(DateTime, daily_mean_temp, temp_9.5) 
+#   
+# write.csv(temp_1m_exact_daily, "./field_data/temp1m_daily.csv")
+# write.csv(temp_5.5m_exact_daily, "./field_data/temp5.5m_daily.csv")
+# write.csv(temp_0p5m_exact_daily, "./field_data/temp0p5m_daily.csv")
+# write.csv(temp_9.5m_exact_daily, "./field_data/temp9.5m_daily.csv")
+
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+```{r pretty figures}
+temp1m_daily$DateTime <- as.POSIXct(temp1m_daily$DateTime)
+
+ggplot(glm_temp1m, aes(x= DateTime, y = temp_1)) + geom_line(color = "black", linewidth = 1) + 
+  geom_point(data = temp1m_daily, color = "red", alpha = 0.3) #+ scale_x_date(date_labels = "%b-%d-%Y")
+
+temp0p5m_daily$DateTime <- as.POSIXct(temp0p5m_daily$DateTime)
+
+ggplot(glm_temp0p5m, aes(x= DateTime, y = temp_0.5)) + geom_line(color = "black", linewidth = 1) + 
+  geom_point(data = temp0p5m_daily, color = "red", alpha = 0.2)
+
+
+temp5.5m_daily$DateTime <- as.POSIXct(temp5.5m_daily$DateTime)
+
+ggplot(glm_temp5.5m, aes(x= DateTime, y = temp_5.5)) + geom_line(color = "black", linewidth = 1) + 
+  geom_point(data = temp5.5m_daily, color = "red", alpha = 0.2)
+
+temp9.5m_daily$DateTime <- as.POSIXct(temp9.5m_daily$DateTime)
+ggplot(glm_temp9.5m, aes(x= DateTime, y = temp_9.5)) + geom_line(color = "black", linewidth = 1) + 
+  geom_point(data = temp9.5m_daily, color = "red", alpha = 0.2)
+
+
+```
+
+```{r temp RMSE}
+
+m1_comp <- left_join(glm_temp1m, temp_1m_exact_daily, by = c('DateTime')) %>% 
+  filter(DateTime > "2008-01-01 00:00:00")
+
+rmse_1 <- m1_comp %>% mutate(sqer = (temp_1.x - temp_1.y)^2) %>% 
+summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
+
+m0p5_comp <- left_join(glm_temp0p5m, temp_0p5m_exact_daily, by = c('DateTime')) %>% 
+  filter(DateTime > "2008-01-01 00:00:00")
+
+rmse_0p5 <- m0p5_comp %>% mutate(sqer = (temp_0.5.x - temp_0.5.y)^2) %>% 
+summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
+
+m5.5_comp <- left_join(glm_temp5.5m, temp_5.5m_exact_daily, by = c('DateTime')) %>% 
+  filter(DateTime > "2008-01-01 00:00:00")
+
+rmse_5.5 <- m5.5_comp %>% mutate(sqer = (temp_5.5.x - temp_5.5.y)^2) %>% 
+summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
+
+m9.5_comp <- left_join(glm_temp9.5m, temp9.5m_daily, by = c('DateTime')) %>% 
+  filter(DateTime > "2008-01-01 00:00:00")
+
+rmse_9.5 <- m9.5_comp %>% mutate(sqer = (temp_9.5.x - temp_9.5.y)^2) %>% 
+summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
+
+print(rmse_1)
+print(rmse_0p5)
+print(rmse_5.5)
+print(rmse_9.5)
+```
