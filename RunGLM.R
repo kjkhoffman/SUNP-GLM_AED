@@ -16,6 +16,8 @@ current_temp <- glmtools::get_var(nc_file, var_name = "temp")
 glmtools::plot_var_nc(nc_file, var_name = "temp")
 current_oxy <- glmtools::get_var(nc_file, var_name = "OXY_sat")
 glmtools::plot_var_nc(nc_file, var_name = "OXY_sat")
+current_carbon <- glmtools::get_var(nc_file, var_name = "CAR_dic")
+glmtools::plot_var_nc(nc_file, var_name = "OXY_sat")
 
 #pull only one depth to check against temperature
 #this may be a problem because of how temperature was collected in some years. 

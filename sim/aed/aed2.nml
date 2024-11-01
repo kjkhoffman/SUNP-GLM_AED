@@ -1,5 +1,9 @@
 &aed_models
-   models = 'aed_sedflux', 'aed_tracer','aed_noncohesive','aed_oxygen'
+   models = 'aed_sedflux', 
+   'aed_tracer',
+   'aed_noncohesive',
+   'aed_oxygen',
+   'aed_carbon'
 /
 &aed_sedflux
    sedflux_model = 'Constant2D'
@@ -8,6 +12,7 @@
    n_zones = 3
    active_zones = 1, 2, 3
    Fsed_oxy = -0.01, -0.01, -0.001
+   Fsed_ch4 = 15, 15, 15
 /
 &aed_tracer
    retention_time = .true.
@@ -31,4 +36,26 @@
    Ksed_oxy = 7.4 !FCR: 8.726660435
    theta_sed_oxy = 1.08
    Fsed_oxy_variable = 'SDF_Fsed_oxy'
+/
+&aed_carbon
+   dic_initial = 91
+   Fsed_dic = 3!0.131348518!0.001
+   Ksed_dic = 98.87064869!100
+   theta_sed_dic = 1.197284209!1.199999
+   pH_initial = 6.2
+   atm_co2 = 0.00041
+   co2_model = 1
+   alk_mode = 2 !0 ! for fresh, use 0
+   ionic = 0.1
+   co2_piston_model = 1
+   ch4_initial = 5
+   Rch4ox = 0.2
+   Kch4ox = 0.2
+   vTch4ox = 1.2
+   Ksed_ch4 = 3.437
+   theta_sed_ch4 = 1.2
+   methane_reactant_variable = 'OXY_oxy'
+   atm_ch4 = 1.76e-06
+   ch4_piston_model = 1
+   Fsed_ch4_variable = 'SDF_Fsed_ch4'
 /
