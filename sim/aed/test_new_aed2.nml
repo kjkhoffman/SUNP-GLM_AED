@@ -192,9 +192,9 @@
    diag_level = 10
 /
 &aed_phytoplankton
-   num_phytos = 3
-   the_phytos = 1,2,3
-   settling = 2,2,2
+   num_phytos = 2
+   the_phytos = 1,2
+   settling = 2,2
    do_mpb = 0
    p_excretion_target_variable = 'OGM_dop'
    n_excretion_target_variable = 'OGM_don'
@@ -212,7 +212,7 @@
    c_uptake_target_variable = 'CAR_dic'
    !dbase = 'aed/aed2_phyto_pars_28April2022_constant.nml'
    !dbase = 'aed/aed2_phyto_pars_20April2022_constant.nml'
-   dbase = 'aed/aed2_phyto_pars_24MAY24_MEL.nml'
+   dbase = 'aed/aed2_phyto_pars.nml'
    diag_level = 10
    min_rho = 900
    max_rho = 1200

@@ -2,8 +2,8 @@
    sim_name = 'Sunapee'
    max_layers = 500
    min_layer_vol = 0.025
-   min_layer_thick = 0.10!
-   max_layer_thick = 0.50!
+   min_layer_thick = 0.2!0.10!Q recs 0.2
+   max_layer_thick = 0.8!0.50!Q recs 0.8
    non_avg = .true.
 /
 &wq_setup
@@ -11,7 +11,7 @@
    wq_nml_file = 'aed/test_new_aed2.nml'
    ode_method = 1
    split_factor = 1
-   bioshade_feedback = .true.
+   bioshade_feedback = .true.!set to false if calibrating for temp, keep AED mods on
    repair_state = .true.
   ! mobility_off = .false.
   ! benthic_mode = 1
@@ -24,7 +24,7 @@
    light_extc = 1, 0.5, 2, 4
    energy_frac = 0.51, 0.45, 0.035, 0.005
    Benthic_Imin = 10
-   Kw = 0.2
+   Kw = 0.2! will need to be higher? FCR kw is 0.9
 /
 &mixing
    coef_mix_conv = 0.2
@@ -33,7 +33,7 @@
    coef_mix_turb = 0.51
    coef_mix_KH = 0.3
    coef_mix_hyp = 0.5
-   deep_mixing = 1.5!check this - WW had 2 here, but CCC thought 1.5 was high
+   deep_mixing = 2
 /
 &morphometry
    lake_name = 'Sunapee'
@@ -73,8 +73,8 @@
    snow_thickness = 0
    white_ice_thickness = 0
    blue_ice_thickness = 0
-   avg_surf_temp = 6
-   restart_variables = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+   !avg_surf_temp = 6!FLARE only
+   !restart_variables = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0!FLARE only
 /
 &meteorology
    met_sw = .true.
@@ -103,7 +103,7 @@
 /
 &outflow
    num_outlet = 0! need outflow data and outflow name and factor > go to CCC .nml for FCR
-   seepage = .true.
+   !seepage = .true.
    !seepage_rate = 0.001
 /
 &snowice
@@ -112,13 +112,13 @@
    snow_rho_min = 100
    !min_ice_thickness = 0.001
    !dt_iceon_avg = 0.5
-   !avg_surf_temp_thres = 0.5
+   !avg_surf_temp_thres = 0.5!this is good to play with if ice is not forming
 /
 &sediment
    benthic_mode = 2
    sed_heat_model = 1
    n_zones = 3
-   zone_heights = 15, 23, 35 ! height above bottom, should be above water surface
+   zone_heights = 15, 27, 35!15, 23, 35 ! height above bottom, should be above water surface, probably want the second zone closer to the thermocline depth
    sed_temp_mean = 3, 6, 12
    sed_temp_depth = 0.5, 0.5, 0.5
    sed_temp_amplitude = 0, 0, 0
