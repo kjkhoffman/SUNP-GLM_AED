@@ -123,19 +123,19 @@ ggplot(glm_temp9.5m, aes(x= DateTime, y = temp_9.5)) + geom_line(color = "black"
 
 ```{r temp RMSE}
 
-m1_comp <- left_join(glm_temp1m, temp_1m_exact_daily, by = c('DateTime')) %>% 
+m1_comp <- left_join(glm_temp1m, temp1m_daily, by = c('DateTime')) %>% 
   filter(DateTime > "2008-01-01 00:00:00")
 
 rmse_1 <- m1_comp %>% mutate(sqer = (temp_1.x - temp_1.y)^2) %>% 
 summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
 
-m0p5_comp <- left_join(glm_temp0p5m, temp_0p5m_exact_daily, by = c('DateTime')) %>% 
+m0p5_comp <- left_join(glm_temp0p5m, temp0p5m_daily, by = c('DateTime')) %>% 
   filter(DateTime > "2008-01-01 00:00:00")
 
 rmse_0p5 <- m0p5_comp %>% mutate(sqer = (temp_0.5.x - temp_0.5.y)^2) %>% 
 summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
 
-m5.5_comp <- left_join(glm_temp5.5m, temp_5.5m_exact_daily, by = c('DateTime')) %>% 
+m5.5_comp <- left_join(glm_temp5.5m, temp5.5m_daily, by = c('DateTime')) %>% 
   filter(DateTime > "2008-01-01 00:00:00")
 
 rmse_5.5 <- m5.5_comp %>% mutate(sqer = (temp_5.5.x - temp_5.5.y)^2) %>% 
