@@ -12,7 +12,7 @@ GLM3r::run_glm(sim_folder = sim_folder)
 #sim_folder <- "./configuration/default_aed"
 
 nc_file <- file.path('sim/output/output.nc')
-glmtools::sim_vars(nc_file)
+#glmtools::sim_vars(nc_file)
 
 current_temp <- glmtools::get_var(nc_file, var_name = "temp")
 glmtools::plot_var_nc(nc_file, var_name = "temp")
@@ -24,6 +24,8 @@ current_carbon <- glmtools::get_var(nc_file, var_name = "white_ice_thickness")
 glmtools::plot_var_nc(nc_file, var_name = "white_ice_thickness")
 current_carbon <- glmtools::get_var(nc_file, var_name = "blue_ice_thickness")
 glmtools::plot_var_nc(nc_file, var_name = "blue_ice_thickness")
+current_snow <- glmtools::get_var(nc_file, var_name = "snow_thickness")
+glmtools::plot_var_nc(nc_file, var_name = "snow_thickness")
 current_carbon <- glmtools::get_var(nc_file, var_name = "CAR_ch4")
 glmtools::plot_var_nc(nc_file, var_name = "CAR_ch4")
 current_carbon <- glmtools::get_var(nc_file, var_name = "lake_level")
