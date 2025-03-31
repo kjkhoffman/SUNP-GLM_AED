@@ -2,7 +2,7 @@
   pd%p_name               =       'cyano','diatom'
   pd%p_initial            =            1,        1
   pd%p0                   =          0.03,    0.03
-  pd%w_p                  =          0.01,  -0.015
+  pd%w_p                  =          0.01,  -0.015 !neg values are sinking
   pd%Xcc                  =           160,     60
   pd%R_growth             =           1.0,     3.0
   pd%fT_Method            =             1,       1
