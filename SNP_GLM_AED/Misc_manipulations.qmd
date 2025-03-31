@@ -1,0 +1,100 @@
+This is a qmd for miscellaneous calculations and transformations that needs to happen with the data for SNP-GLM-AED that I really ought to keep track of. 
+
+
+Fill time series gaps. If there were gaps in time series, I could use tsibble to fill them. Somehow, neither of my time series has gaps, despite them saying they do and spotting gaps last time I looked at them. 
+```{r fill time series gaps}
+test1 <- read_csv('./sim/inputs/oneInflow_14Jun19_2.csv') |>  
+tsibble::as_tsibble(index  = time) |> #\
+tsibble::has_gaps()
+
+inflow <- read_csv('./sim/inputs/oneInflow_14Jun19_2.csv') |>  
+tsibble::as_tsibble(index  = time) |> #\
+tsibble::fill_gaps()|>
+mutate(across(FLOW:SALT, ~zoo::na.approx(.x, maxgap  = 5)))
+
+summary(inflow)
+```
+```{r met data}
+met <- read_csv('./sim/inputs/SunapeeMet_1979_2020EST.csv')
+
+met %>% filter(time > "2016-03-28 23:23:59" & time < "2016-03-30 00:00:00")
+```
+
+```{r outflow}
+
+outflow <- read_csv('./sim/inputs/corr_outflow_impmodel_baseflow_23Mar2017.csv')|>  
+tsibble::as_tsibble(index = time) |> #\
+tsibble::count_gaps()
+
+outflow %>% filter(time > "2016-03-01" & time < "2017-04-30")
+
+tail(outflow)
+
+```
+
+
+
+
+Read in and look at Sugar River discharge data and Sunapee Lake level data
+*there are some gaps. Currently interpolating with approx, max gap = 1 day. 
+*The maximum discharge in the time series from 2016-05-17 - 2025-03-24 is 24.3525m3ps
+*plotting a time series to make sure that it looks reasonable
+*the 3 points above 24m3ps look unreasonably high and discharge around them does not match. I am excluding them from the original data, then interpolating over those times.
+
+```{r Sugar River Outflow}
+
+snp_discharge <- read_csv("./real_data/SugarRiverDischarge.csv")
+snp_discharge_mps<- snp_discharge %>% rename(discharge_cfs = "Observed River Discharge (CFS)") %>% 
+  mutate(discharge_m3ps = (discharge_cfs*0.028316847)) %>% 
+  #filter(discharge_m3ps < 24) #excluding discharge greater than 24m3ps
+summary(snp_discharge_mps)
+snp_discharge_mps %>% tsibble::as_tsibble(index  = Datetime) |> #\
+tsibble::has_gaps() 
+
+snp_discharge_mps %>%  #check for gaps!
+  tsibble::as_tsibble(index  = Datetime) |> 
+  tsibble::count_gaps() 
+
+snp_discharge_gapfree <- snp_discharge_mps %>%  #fill gaps using na.approx
+  tsibble::as_tsibble(index  = Datetime) |>
+  tsibble::fill_gaps()|>
+mutate(across(discharge_cfs:discharge_m3ps, ~zoo::na.approx(.x, maxgap  = 1))) #%>% #this approximates gaps as large as one day. Probably don't want to go larger than that here, since this is hourly discharge
+ # tsibble::count_gaps()
+
+snp_discharge_mps %>% ggplot(aes(x = Datetime, y = discharge_m3ps)) + geom_point()
+
+```
+
+Sunapee Lake Level
+*Data extent: 2010-04-21 to 2025-03-24
+*full pool is 1093.15ft, 333.1921m
+*datetime is in EDT!!!
+```{r}
+snp_llevel <- read_csv("./real_data/SNP_level_2010-Mar2025.csv")
+
+snp_level<- snp_llevel %>% rename(level_ft = "Observed Reservoir Pool Elevation (FT)") %>% 
+  rename(datetime = "Datetime (EDT)") %>% 
+  filter(datetime != "2018-12-28 20:00:00" & datetime != "2018-12-28 19:00:00" & datetime != "2018-12-28 18:00:00" & datetime != "2018-12-28 16:00:00" & datetime != "2018-12-28 17:00:00") %>%  #exclude weird level data %>% 
+  mutate(level_m = (level_ft*0.3048)) 
+
+summary(snp_level)
+snp_level %>% tsibble::as_tsibble(index  = datetime) |> #\
+tsibble::has_gaps() 
+
+snp_level %>%  #check for gaps!
+  tsibble::as_tsibble(index  = datetime) |> 
+  tsibble::count_gaps() 
+
+snp_level_gapfree <- snp_level %>%  #fill gaps using na.approx
+  tsibble::as_tsibble(index  = datetime) |>
+  tsibble::fill_gaps()|>
+mutate(across(level_ft:level_m, ~zoo::na.approx(.x, maxgap  = 1))) #this seems to be interpolating across more than 1 days worth of gaps. Why, How?
+
+snp_level_gapfree %>% ggplot(aes(x = datetime, y = level_m)) + geom_point()
+snp_level %>% 
+  #filter(datetime < "2023-12-01 00:00:00" & datetime > "2015-01-01 00:00:00") %>% 
+  ggplot(aes(x = datetime, y = level_m)) + geom_point()
+```
+
+
+
