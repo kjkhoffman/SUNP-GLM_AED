@@ -1,0 +1,167 @@
+&glm_setup
+   sim_name = 'Sunapee'
+   max_layers = 500
+   min_layer_vol = 0.025
+   min_layer_thick = 0.2!0.10!Q recs 0.2
+   max_layer_thick = 0.8!0.50!Q recs 0.8
+   non_avg = .true.
+/
+&wq_setup
+   wq_lib = 'aed'
+   wq_nml_file = 'aed/test_new_aed2.nml'
+   ode_method = 1
+   split_factor = 1
+   bioshade_feedback = .true.!set to false if calibrating for temp, keep AED mods on
+   repair_state = .true.
+  ! mobility_off = .false.
+  ! benthic_mode = 1
+  ! n_zones = 3
+  ! zone_heights = 15, 23, 35 !same as sediment zones
+/
+&light
+   light_mode = 0
+   n_bands = 4
+   light_extc = 1, 0.5, 2, 4
+   energy_frac = 0.51, 0.45, 0.035, 0.005
+   Benthic_Imin = 10
+   Kw = 0.5!0.4!0.5!0.95!0.2! will need to be higher? FCR kw is 0.9
+/
+&mixing
+   coef_mix_conv = 0.2
+   coef_wind_stir = 0.23
+   coef_mix_shear = 0.3
+   coef_mix_turb = 0.51
+   coef_mix_KH = 0.3
+   coef_mix_hyp = 0.5
+   deep_mixing = 2
+/
+&morphometry !double check that the bathymetry is the same as what Nicole had!
+   lake_name = 'Sunapee'
+   latitude = 43.395
+   longitude = -72.053
+   bsn_len = 12870
+   bsn_wid = 3000
+   bsn_vals = 82
+   crest_elev = 333.943
+   H = 299.43, 299.943, 300.443, 300.943, 301.443, 301.943, 302.443, 302.943, 303.443, 303.943, 
+   304.443, 304.943, 305.443, 305.943, 306.443, 306.943, 307.443, 307.943, 308.443, 308.943, 
+   309.443, 309.943, 310.443, 310.943, 311.443, 311.943, 312.443, 312.943, 313.443, 313.943, 
+   314.443, 314.943, 315.443, 315.943, 316.443, 316.943, 317.443, 317.943, 318.443, 318.943, 319.443, 
+   319.943, 320.443, 320.943, 321.443, 321.943, 322.443, 322.943, 323.443, 323.943, 324.443, 324.943, 
+   325.443, 325.943, 326.443, 326.943, 327.443, 327.943, 328.443, 328.943, 329.443, 329.943, 330.443, 
+   330.943, 331.443, 331.943, 332.343, 332.443, 332.543, 332.643, 332.743, 332.843, 332.943, 333.043, 
+   333.143, 333.243, 333.343, 333.443, 333.543, 333.643, 333.743, 333.943
+   A = 1, 16.90309, 38.87712, 64.23176, 158.88908, 7254.80801, 25205.89398, 33207.81875, 41551.18602,
+   51853.6219, 62734.1436, 79030.41666, 105037.51731, 133941.80829, 168576.24818, 214836.63623, 
+   269137.82616, 327112.05845, 401221.9844, 483528.22071, 575947.57823, 676930.04325, 797467.69789, 
+   925704.7119, 1088626.8751, 1283336.99713, 1505854.39934, 1740820.93038, 1988527.32348, 2234911.89462, 
+   2485285.59597, 2723309.89675, 2978076.71227, 3264022.97524, 3653258.97559, 4050485.06854, 
+   4414109.50064, 4796077.1705, 5158332.45198, 5579849.98152, 6016348.72339, 6468883.43068, 6928267.27171, 
+   7476296.00935, 8028820.97004, 8623779.45825, 9274820.72252, 9852960.63206, 10365149.7392, 
+   10843023.87491, 11253594.96068, 11644117.28649, 12013032.38706, 12356310.56475, 12673823.35603, 
+   12988489.66626, 13285122.06535, 13576406.32546, 13863498.61821, 14148319.13512, 14418854.84716, 
+   14691317.51194, 14951571.07182, 15234317.57908, 15510517.51797, 15780918.00526, 16009460, 16071489, 
+   16135107, 16203453, 16273655, 16349525, 16489737, 16603406, 16760708, 16788809, 16804233, 16826128, 
+   16844170, 16863779, 16885473, 16934251.6
+/
+&time
+   timefmt = 2
+   start = '2008-01-01 00:00:00'
+   stop = '2018-12-31 00:00:00'
+   dt = 3600
+   num_days = 1
+   timezone = -5
+/
+&output
+   out_dir = "./output"
+   out_fn = "output"
+   nsave = 24
+/
+&init_profiles
+   lake_depth = 33.33408
+   num_depths = 6
+   the_depths = 0, 4, 8, 12, 16, 20
+   the_temps = 5.1, 5, 4.9, 4.9, 4.8, 4.8
+   the_sals = 0, 0, 0, 0, 0, 0
+   num_wq_vars = 5
+   wq_names = 'OXY_oxy', 'NIT_amm', 'NIT_nit', 'PHS_frp', 'OGM_doc' 
+   wq_init_vals = 250, 250, 250, 250, 250, 250, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01,
+   1, 1, 1, 1, 1, 1, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003,
+   30, 30, 30, 30, 30, 30
+   !need to add init conditions x6 for each variable
+   snow_thickness = 0
+   white_ice_thickness = 0
+   blue_ice_thickness = 0
+   !avg_surf_temp = 6!FLARE only
+   !restart_variables = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0!FLARE only
+/
+&meteorology
+   met_sw = .true.
+   lw_type = 'LW_IN'
+   rain_sw = .true.
+   atm_stab = 0
+   catchrain = .false.
+   rad_mode = 1
+   albedo_mode = 1
+   cloud_mode = 4
+   meteo_fl = 'inputs/SunapeeMet_1979_2020EST.csv'
+   subdaily = .true.
+   wind_factor = 1
+   sw_factor = 1!
+   lw_factor = 1!
+   at_factor = 1
+   rh_factor = 1
+   rain_factor = 1
+   cd = 0.0013
+   ce = 0.0013
+   ch =  0.0013
+   time_fmt = 'YYYY-MM-DD hh:mm:ss'
+/
+&inflow
+   !num_inflows = 0
+   num_inflows = 1! need inflow data and inflow name and factor
+   names_of_strms = 'HerrickCove'!,'GeorgesMills'
+   subm_flag = .false.!, .false., .true. !these are all taken directly from CCC's nml file for FCR
+   strm_hf_angle = 55 !, 55, -15          !I need to decide if I want one or 2 inflows
+   strmbd_slope = 0.05 !, 0.05, 15        !And I need to figure out what the streambed slope for these are
+   strmbd_drag = 0.03 !, 0.016, 1.2       !And drag, and inflow factor. 
+   inflow_factor = 1 !, 1, 0.2            !These should all be based on how much each contributes
+   inflow_fl =  'inputs/oneInflow_14Jun19_2.csv'  !Let's start with just the one inflow from Nicole to see if we can get it going
+   inflow_varnum = 12
+   inflow_vars =  'FLOW','SALT','TEMP','OGM_doc','OGM_poc','OGM_don','NIT_nit','NIT_amm','OGM_pon','PHS_frp','OGM_dop','OGM_pop'
+   !Cayelan's list of inflow solutes 'FLOW','TEMP','SALT','OXY_oxy','NIT_amm','NIT_nit','PHS_frp','OGM_doc','OGM_docr','OGM_poc','OGM_don','OGM_donr','OGM_pon','OGM_dop','OGM_dopr','OGM_pop','CAR_dic','CAR_ch4','SIL_rsi'
+/
+&outflow
+   !num_outlet = 0
+   num_outlet = 1! need outflow data and outflow name and factor > go to CCC .nml for FCR
+   flt_off_sw = .false.    !these are also all pulled from CCC's FCR .nml file. 
+   outl_elvs = 332.3143
+   outflow_factor = 1
+   outlet_type = 1
+   outflow_fl = 'inputs/corr_outflow_impmodel_baseflow_23Mar2017.csv'
+   !seepage = .true.
+   !seepage_rate = 0.001
+   crest_width = 3 !3m wide?
+   crest_factor = 1
+   !bsn_len_outl = 711.699
+   !bsn_wid_outl = 226.03
+/
+&snowice
+   snow_albedo_factor = 1
+   snow_rho_max = 500
+   snow_rho_min = 100
+   !min_ice_thickness = 0.001
+   !dt_iceon_avg = 0.5
+   !avg_surf_temp_thres = 0.5!this is good to play with if ice is not forming
+/
+&sediment !check to make sure that these match Whitney's
+   benthic_mode = 2
+   sed_heat_model = 1
+   n_zones = 3
+   zone_heights = 15, 28, 35!15, 27, 35!15, 23, 35 ! height above bottom, last should be above water surface, probably want the second zone closer to the thermocline depth
+   sed_temp_mean = 3, 6, 12
+   sed_temp_depth = 0.5, 0.5, 0.5
+   sed_temp_amplitude = 0, 0, 0
+   sed_temp_peak_doy = 242.5, 242.5, 242.5
+   sed_heat_Ksoil = 1.2, 1.2, 1.2
+/
