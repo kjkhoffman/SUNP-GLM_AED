@@ -1,6 +1,6 @@
 #script to run GLM
-library(devtools)
-devtools::install_github("rqthomas/glmtools", force = TRUE)
+#library(devtools)
+#devtools::install_github("rqthomas/glmtools", force = TRUE)
 #devtools::install_github("rqthomas/GLM3r", force = TRUE)
 library(glmtools)
 library(GLM3r)
@@ -14,7 +14,22 @@ GLM3r::run_glm(sim_folder = sim_folder)
 
 nc_file <- file.path('./SUNP-GLM_AED/SNP_GLM_AED/sim/output/output.nc')
 #glmtools::sim_vars(nc_file)
+# evap <- function (file) 
+# {
+#   day_secs <- 86400
+#   m_to_mm <- 1000
+#   glm_evaporation <- glmtools::get_var(file, var_name = "evaporation")
+#   glm_evaporation[, 2] <- glm_evaporation[, 2] * day_secs * 
+#     m_to_mm
+#   names(glm_evaporation) <- c("DateTime", "evaporation(mm/d)")
+#   return(glm_evaporation)
+# }
 
+current_evap <- glmtools::get_var(nc_file, var_name = "evaporation")
+
+
+
+get_evaporation(nc_file)
 current_temp <- glmtools::get_var(nc_file, var_name = "temp")
 glmtools::plot_var_nc(nc_file, var_name = "temp")
 current_oxy <- glmtools::get_var(nc_file, var_name = "OXY_sat")

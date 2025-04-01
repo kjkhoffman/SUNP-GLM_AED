@@ -67,7 +67,7 @@
 &time
    timefmt = 2
    start = '2008-01-01 00:00:00'
-   stop = '2018-12-31 00:00:00'
+   stop = '2008-03-28 00:00:00'
    dt = 3600
    num_days = 1
    timezone = -5
@@ -76,6 +76,11 @@
    out_dir = "./output"
    out_fn = "output"
    nsave = 24
+   csv_lake_fname = 'lake'
+   csv_point_fname = 'lake'
+   csv_point_at = 1
+   csv_point_nvars = 1
+   csv_point_vars = 'temp'
 /
 &init_profiles
    lake_depth = 33.33408

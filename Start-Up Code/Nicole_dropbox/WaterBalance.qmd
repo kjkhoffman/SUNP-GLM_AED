@@ -1,0 +1,47 @@
+This script is developed based on Nicole's water balance script.
+It calculates outflow based on inflow, evap, and water level. 
+Started Mar 31 2025. 
+
+Requires: 
+Sunapee inflow data
+Sunapee outflow data
+Met/rainfall data
+evap data
+
+```{r libraries}
+library(zoo)
+library(lubridate)
+```
+```{r datasets}
+# evap<-read.csv("simulated_evap.csv")
+# metfile<-read.csv("SunapeeMet.csv")
+# stage<-read.csv("field_stage.csv")
+# 
+# hypso<-read.csv("depth_volume_matrix_0p1m_08Dec2016.csv")
+# hypso2<-read.csv("hypsography_matrix_0p5m_14Dec2016.csv")
+# inf790<-read.csv("oneInflow_20Mar17.csv")
+```
+
+```{r setup}
+#make sure that datetimes are reading correctly and set tz to EST
+
+
+```
+
+```{r precip}
+#get rain in hourly rain per day
+
+
+```
+
+```{r evap}
+#join.exp<-join.exp %>% mutate(evap = evap*86164.1) ##evap now in m per d
+
+
+```
+
+```{r total inflow}
+#I should be able to use Nicole's inflow file here
+
+```
+
