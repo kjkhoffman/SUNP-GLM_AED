@@ -1,0 +1,59 @@
+This is a qmd to get Sugar River Outflow data for Sunapee. We need a USGS gauged stream, and Sugar River is likely to be the closest thing that we have to a gaged stream. I am using an API to pull from the NH Dam Bureau website. It is then saved to GitHub, then I will use the saved data to pull the most recent data. 
+
+This is the River Discharge that I want
+{
+        "id": "2a32f4a1-5682-4b75-9e58-9c87f35d6b89",
+        "name": "Observed River Discharge",
+        "code": "SCFNH.USGS.QIN.PT1H",
+        "parameter": "227e7f89-91e8-40a0-a866-e3290c6d1396",
+        "tree_node": "31bae2a8-018d-48d1-9ebe-b13ae3860a57",
+        "location": "a23ce698-4af4-40e2-a1f2-7005991619aa"
+    },
+
+```{r open the API}
+#trying to use chatgpt
+ install.packages("reticulate")
+library(reticulate)
+```
+
+```{r}
+install.packages(c("httr", "jsonlite"))
+library(httr)
+library(jsonlite)
+
+# Define the API endpoint
+url <- "https://nhdes.rtiamanzi.org/api/timeseries/c0da89d0-34a8-419f-9864-746658cbd524/values/?start=2022-09-22T09:00:00&end=2022-11-21T09:00:00"
+
+# Define the query parameters
+params <- list(
+  start = "2022-09-22T09:00:00",
+  end = "2022-11-21T09:00:00"
+)
+
+# Make the GET request
+response <- GET(url, query = params)
+
+str(response)
+response$content
+response$times
+response$request
+response$status_code
+
+# Check if the request was successful (status code 200 indicates success)
+if (status_code(response$status_code) == 200) {
+  # Parse the JSON content from the response
+  content_data <- content(response$content, "text")
+  parsed_data <- fromJSON(content_data)
+  
+  # Print the parsed data
+  print(parsed_data)
+} else {
+  cat("Error: ", status_code(response), "\n")
+}
+
+GET("https://nhdes.rtiamanzi.org/api/timeseries/ID")
+res = GET("https://nhdes.rtiamanzi.org/api/timeseries/c0da89d0-34a8-419f-9864-746658cbd524/values/?start=2022-09-22T09:00:00&end=2022-11-21T09:00:00")
+```
+
+
+
