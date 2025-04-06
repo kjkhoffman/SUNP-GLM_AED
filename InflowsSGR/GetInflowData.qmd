@@ -24,6 +24,17 @@ library(jsonlite)
 # Define the API endpoint
 url <- "https://nhdes.rtiamanzi.org/api/timeseries/c0da89d0-34a8-419f-9864-746658cbd524/values/?start=2022-09-22T09:00:00&end=2022-11-21T09:00:00"
 
+url2 <- "https://nhdes.rtiamanzi.org/api/timeseries/sparse/?"
+
+# "https://nhdes.rtiamanzi.org/api/timeseries/sparse/?"
+# parameter__code=STG&location__code=ALLN3
+
+location_code = "SCFNH"
+parameter_code = "STG" #for river stage
+#parameter_code = "QIN" #for instantaneous discharge, this is what I'll want
+
+  
+
 # Define the query parameters
 params <- list(
   start = "2022-09-22T09:00:00",
@@ -34,10 +45,12 @@ params <- list(
 response <- GET(url, query = params)
 
 str(response)
-response$content
+what <- response$content
 response$times
 response$request
 response$status_code
+response$headers
+response$output
 
 # Check if the request was successful (status code 200 indicates success)
 if (status_code(response$status_code) == 200) {

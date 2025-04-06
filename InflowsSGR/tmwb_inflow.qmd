@@ -12,6 +12,7 @@ longitude = -72.053
 Questions: 
 myflowgage$area ~line 100. Should this be the watershed area or the lake area? I took the lake area for Sunapee.
 I need arrow. Can I use arrow in Docker? I'm on an M3 chip now.
+- I need to install the arm64 version of R on this mac!!!
 
 ```{r load packages}
 #packages
@@ -90,6 +91,8 @@ myflowgage = returnlist
 ```
 
 ```{r format flowgauge data}
+install.packages("arrow")
+library(arrow)
 #change coordinates and area for entire BVR watershed
 myflowgage$area<- 2.27 #km
 myflowgage$declat<- 37.31321
@@ -154,8 +157,9 @@ mybbox = matrix(c(
   myflowgage$declat - degdist, myflowgage$declat + degdist), 
   ncol = 2, byrow = TRUE)
 
+```
 
-
+```{r}
 ############### THIS SECTION WAS CAUSING ISSUES WITH SF PACKAGE AND DIDNT SEEM ESSENTIAL ######
 ############### IT WAS REMOVED FROM THIS SECTION AND THE MATCHING SECTION IN create_inflow_forecast() #######
 #streams=readOGR(paste0(getwd(), "/model_code/inflow_tmwb/TMWB_data/03010101/Shape/NHDFlowline.dbf")) 
@@ -203,9 +207,9 @@ mybbox = matrix(c(
 
 ##########################################
 
+```
 
-
-
+```{r soil functions}
 # 3 Functions to calculate SWE and excess when soil is drying, wetting, and wetting above capacity
 soildrying<-function(AWprev,dP,AWC){
   AW<-AWprev*exp(dP/AWC)
@@ -224,7 +228,9 @@ soilwetting<-function(AWprev,dP,AWC){
   excess<-0.0
   c(AW,excess)
 }
+```
 
+```{r params and run TMWB model}
 #initialize parameters
 myflowgage$TMWB$AWC=0.13*400 #AWC=.13; 0.12 and 0.16 were the values obtained from USDA web soil survey
 # z=2000mm --> this one is hard because it really changes Qpred a LOT - calibrate this parameter? trees generally have <3500 mm roots...
@@ -244,9 +250,6 @@ myflowgage$TMWB$S=NA
 myflowgage$TMWB$S[1]=0
 myflowgage$fcres=0.3  #typically ranges from 0.2-0.5
 myflowgage$SlopeRad=0.0 
-
-#need to source the functions bc EcoHydRology is no longer maintained
-source("./model_code/inflow_tmwb/EcoHydrology_functions.R")
 
 TMWBModel<-function(hru_list){  
   # hru_list is the same object we have been using till now to store all our
