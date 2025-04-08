@@ -1,4 +1,8 @@
-This is a qmd to get Sugar River Outflow data for Sunapee. We need a USGS gauged stream, and Sugar River is likely to be the closest thing that we have to a gaged stream. I am using an API to pull from the NH Dam Bureau website. It is then saved to GitHub, then I will use the saved data to pull the most recent data. 
+This is a qmd to get Sugar River Outflow data for Sunapee. 
+
+We need a USGS gauged stream, and Sugar River is likely to be the closest thing that we have to a gauged stream. I am using an API to pull from the NH Dam Bureau website. It is then saved to GitHub, then I will use the saved data to pull the most recent data. 
+
+This will produce the SugarOutflow.csv
 
 This is the River Discharge that I want
 {
@@ -10,62 +14,34 @@ This is the River Discharge that I want
         "location": "a23ce698-4af4-40e2-a1f2-7005991619aa"
     },
 
-```{r open the API}
-#trying to use chatgpt
- install.packages("reticulate")
-library(reticulate)
-```
+link to guide: https://nhdes.rtiamanzi.org/media/Public_Data_Access_VMdBVzN.pdf
 
-```{r}
+```{r packages}
 install.packages(c("httr", "jsonlite"))
 library(httr)
 library(jsonlite)
+```
+Many thanks to Austin for actually figuring out how to find the data for this. 
+```{r Sugar River Discharge}
+ts_id <- '2a32f4a1-5682-4b75-9e58-9c87f35d6b89' #ID
+start_time <- "2016-05-17T00:00:00" #first record is 2016-05-17 17:00:00
+end_time <- "2025-04-07T00:00:00"
 
-# Define the API endpoint
-url <- "https://nhdes.rtiamanzi.org/api/timeseries/c0da89d0-34a8-419f-9864-746658cbd524/values/?start=2022-09-22T09:00:00&end=2022-11-21T09:00:00"
+ts_url <- paste0('https://nhdes.rtiamanzi.org/api/timeseries/',ts_id,'/values/?start=',
+                 start_time, 
+                 '&end=',
+                 end_time)
 
-url2 <- "https://nhdes.rtiamanzi.org/api/timeseries/sparse/?"
+api_res <- GET(ts_url)
 
-# "https://nhdes.rtiamanzi.org/api/timeseries/sparse/?"
-# parameter__code=STG&location__code=ALLN3
+api_content <- content(api_res)
 
-location_code = "SCFNH"
-parameter_code = "STG" #for river stage
-#parameter_code = "QIN" #for instantaneous discharge, this is what I'll want
+pull_dates <- sapply(api_content, function(i) unlist(i)[[3]])
+pull_values <- sapply(api_content, function(i) unlist(i)[[4]])
 
-  
-
-# Define the query parameters
-params <- list(
-  start = "2022-09-22T09:00:00",
-  end = "2022-11-21T09:00:00"
-)
-
-# Make the GET request
-response <- GET(url, query = params)
-
-str(response)
-what <- response$content
-response$times
-response$request
-response$status_code
-response$headers
-response$output
-
-# Check if the request was successful (status code 200 indicates success)
-if (status_code(response$status_code) == 200) {
-  # Parse the JSON content from the response
-  content_data <- content(response$content, "text")
-  parsed_data <- fromJSON(content_data)
-  
-  # Print the parsed data
-  print(parsed_data)
-} else {
-  cat("Error: ", status_code(response), "\n")
-}
-
-GET("https://nhdes.rtiamanzi.org/api/timeseries/ID")
-res = GET("https://nhdes.rtiamanzi.org/api/timeseries/c0da89d0-34a8-419f-9864-746658cbd524/values/?start=2022-09-22T09:00:00&end=2022-11-21T09:00:00")
+output_df <- data.frame(date = lubridate::as_datetime(pull_dates), value = as.numeric(pull_values))
+output_df <- output_df |> rename(discharge_cfs = value)
+write.csv(output_df, "SugarOutflow.csv")
 ```
 
 

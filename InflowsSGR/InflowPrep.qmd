@@ -1,2 +1,66 @@
 This is a file to prep inflow for forecasting.
 
+```{r packages}
+pacman::p_load(tidyverse, dplyr, ggplot2, lubridate, here, tsibble, zoo)
+```
+
+
+```{r read in outflow data}
+sug_river <- read_csv("~/GitHubRepos/CareyLabVT/SUNP-GLM_AED/InflowsSGR/SugarOutflow.csv") |> select(-c(...1))
+
+sug_river <- sug_river |> 
+  filter(discharge_cfs < 750)  # there are definitely a few discharge points that are too high. Excluding everything above 750 cfs
+
+#is there missing data in our timeseries of outflow?
+sug_river |> tsibble::as_tsibble(index = "date") |> 
+  tsibble::has_gaps() #yes, I have missing data
+
+gaps <- sug_river |> tsibble::as_tsibble(index = "date") |> 
+ tsibble::count_gaps() #some of these gaps are big, longest gap is 5 days. going to use na_approx to interpolate for now
+
+#plot discharge data
+sug_river |> 
+  filter(day < "2018-01-01") |> 
+  ggplot(aes(date, discharge_cfs)) + geom_point() 
+# there are definitely a few discharge points that are too high. Excluded everything above 750 cfs
+
+#get daily discharge in cfs
+#This averages the cfs by day
+#this does not account for any missing data
+sug_fill <- sug_river |> 
+  tsibble::as_tsibble(index = "date") |> 
+  tsibble::fill_gaps()|>
+mutate(across(discharge_cfs, ~zoo::na.approx(.x, maxgap  = 150)))  |> 
+  mutate(day = date(date)) |> 
+  mutate(doy = yday(date))
+  
+#double check that I got all the gaps #no gaps! 
+sug_fill |> tsibble::as_tsibble(index = "date") |> 
+  tsibble::has_gaps()
+
+sug_fill <- sug_fill |> tsibble::as_tsibble(index = "date") 
+
+sug_daily <- sug_fill |> 
+  mutate_at(c(2:2), as.numeric, na.rm = T) |> 
+  group_by(day) |> 
+  mutate(daily_mean_discharge_cfs = mean(discharge_cfs)) |> 
+  select(day, doy, daily_mean_discharge_cfs)
+
+sug_daily <- sug_daily |> 
+  subset(select = -date) |> 
+  unique() |> 
+  na.omit()
+
+#triple check that I got all the gaps
+#not sure why I have gaps again here :(
+sug_daily |> tsibble::as_tsibble(index = "day") |> 
+  tsibble::count_gaps()
+
+```
+
+```{r write csv}
+write_csv(sug_daily, "sug_daily.csv")
+
+```
+
+
