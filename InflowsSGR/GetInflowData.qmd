@@ -25,7 +25,7 @@ Many thanks to Austin for actually figuring out how to find the data for this.
 ```{r Sugar River Discharge}
 ts_id <- '2a32f4a1-5682-4b75-9e58-9c87f35d6b89' #ID
 start_time <- "2016-05-17T00:00:00" #first record is 2016-05-17 17:00:00
-end_time <- "2025-04-07T00:00:00"
+end_time <- "2025-04-14T00:00:00"
 
 ts_url <- paste0('https://nhdes.rtiamanzi.org/api/timeseries/',ts_id,'/values/?start=',
                  start_time, 

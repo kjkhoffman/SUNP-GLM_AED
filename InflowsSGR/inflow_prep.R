@@ -65,7 +65,7 @@
 #######################################################################
 
 #load packages
-pacman::p_load(dplyr,zoo,EcoHydRology,rMR,tidyverse,lubridate)
+pacman::p_load(dplyr, zoo, rMR, tidyverse, lubridate)
 
 
 inflow_prep <- function(inflow_df){
@@ -94,38 +94,39 @@ BVRchem <- read.csv(infile1, header=T) |>
   mutate(DateTime = as.POSIXct(strptime(DateTime, "%Y-%m-%d", tz="EST"))) |>
   rename(time = DateTime)
 
+#don't need silica for sunp yet
 #read in lab dataset of dissolved silica, measured by Jon in summer 2014 only
-silica <- read.csv("./model_code/inflow_tmwb/inputs/FCR2014_Chemistry.csv", header=T) |>
-  select(Date, Depth, DRSI_mgL) |>
-  mutate(Date = as.POSIXct(strptime(Date, "%Y-%m-%d", tz="EST"))) |>
-  dplyr::filter(Depth == 999) |> #999 = weir inflow site
-  select(Date, DRSI_mgL) |>
-  rename(time = Date)
+# silica <- read.csv("./model_code/inflow_tmwb/inputs/FCR2014_Chemistry.csv", header=T) |>
+#   select(Date, Depth, DRSI_mgL) |>
+#   mutate(Date = as.POSIXct(strptime(Date, "%Y-%m-%d", tz="EST"))) |>
+#   dplyr::filter(Depth == 999) |> #999 = weir inflow site
+#   select(Date, DRSI_mgL) |>
+#   rename(time = Date)
 
 
 #read in lab dataset of CH4 from 2015-2019
 # for BVR: Only have a handful of days w/ CH4 in inflows (BVR 100 and 200); aggregate all time points
 # and average CH4 - use average as CH4 input for the entier year
-ghg <- read.csv("./model_code/inflow_tmwb/inputs/BVR_GHG_Inflow_20200619.csv", header=T) |>
-  dplyr::filter(Reservoir == "BVR") |>
-  dplyr::filter(Depth_m == 100|Depth_m == 200) |> #weir inflow
-  select(DateTime, ch4_umolL) |>
-  mutate(DateTime = as.POSIXct(strptime(DateTime, "%d-%b-%y", tz="EST"))) |>
-  rename(time = DateTime, CAR_ch4 = ch4_umolL)
+# ghg <- read.csv("./model_code/inflow_tmwb/inputs/BVR_GHG_Inflow_20200619.csv", header=T) |>
+#   dplyr::filter(Reservoir == "BVR") |>
+#   dplyr::filter(Depth_m == 100|Depth_m == 200) |> #weir inflow
+#   select(DateTime, ch4_umolL) |>
+#   mutate(DateTime = as.POSIXct(strptime(DateTime, "%d-%b-%y", tz="EST"))) |>
+#   rename(time = DateTime, CAR_ch4 = ch4_umolL)
 
 #read in lab dataset of pH 
-inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/198/13/e50a50d062ee73f4d85e4f20b360ce4f" 
-infile1 <- tempfile()
-try(download.file(inUrl1,infile1))
+# inUrl1  <- "https://pasta.lternet.edu/package/data/eml/edi/198/13/e50a50d062ee73f4d85e4f20b360ce4f" 
+# infile1 <- tempfile()
+# try(download.file(inUrl1,infile1))
 
-pH <- read.csv(infile1) |>
-  dplyr::filter(Reservoir == "BVR") |> 
-  dplyr::filter(Site == 50) |> #don't have inflow ph so just going to use median deephole ph
-  select(DateTime, Depth_m, pH) |>
-  drop_na() |> 
-  mutate(DateTime = as.POSIXct(strptime(DateTime, "%Y-%m-%d", tz="EST"))) |>
-  rename(time = DateTime,
-         CAR_pH = pH)
+# pH <- read.csv(infile1) |>
+#   dplyr::filter(Reservoir == "BVR") |> 
+#   dplyr::filter(Site == 50) |> #don't have inflow ph so just going to use median deephole ph
+#   select(DateTime, Depth_m, pH) |>
+#   drop_na() |> 
+#   mutate(DateTime = as.POSIXct(strptime(DateTime, "%Y-%m-%d", tz="EST"))) |>
+#   rename(time = DateTime,
+#          CAR_pH = pH)
 
 
 # start loop

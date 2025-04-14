@@ -18,7 +18,7 @@ I need arrow. Can I use arrow in Docker? I'm on an M3 chip now.
 #packages
 if (!require("pacman"))install.packages("pacman")
 pacman::p_load(httr, GSODR, curl, elevatr, devtools, sf,
-               raster, soilDB, lattice, lubridate, tidyverse, foreign, sp)
+               raster, soilDB, lattice, lubridate, tidyverse, foreign, sp, arrow)
 #load functions from EcoHydrology. Austin Delany has compiled everything that we need for this. 
 source('EcoHydrology_functions.R')
 ```
@@ -43,16 +43,15 @@ old soil data code
 
 print('SETTING UP SOIL FILES...')
 
-```{r get flowgauge data}
+This chunk is to get flowgage data from USGS. For Sunapee, we are getting flowgage data from the Sugar River Outflow. This is obtained in GetInflowData.qmd and cleaned for this purpose in InflowPrep.qmd. 
+```{r get flowgauge data, eval=FALSE}
 #Using ROANOKE RIVER AT NIAGARA, VA  usgs gage to use as a template (will write over with BVR-specific data) 
-flow_start <- '2020-01-01'
+flow_start <- '2019-12-01'
 flow_end <- as.character(Sys.Date())
-flow_site <- 'bvre'
+flow_site <- 'sunp'
 
 myflowgage_id="02056000" #will need to change this to read in sunapee data
 #myflowgage=get_usgs_gage(myflowgage_id,begin_date = flow_start, end_date = flow_end)
-
-
 
 ### add full get_usgs_gauge function code into script
 flowgage_id = myflowgage_id
@@ -87,21 +86,22 @@ returnlist = list(declat = declat, declon = declon, flowdata = flowdata, area = 
 myflowgage = returnlist
 
 ### end function code ###
-
 ```
 
-```{r format flowgauge data}
-install.packages("arrow")
-library(arrow)
-#change coordinates and area for entire BVR watershed
-myflowgage$area<- 2.27 #km
-myflowgage$declat<- 37.31321
-myflowgage$declon<- -79.81535
 
+
+```{r format flowgauge data}
+# install.packages("arrow")
+# library(arrow)
+#change coordinates and area for entire BVR watershed
+# myflowgage$area<- 2.27 #km
+# myflowgage$declat<- 37.31321
+# myflowgage$declon<- -79.81535
+sunp_flowdata <- read_csv("SugarOutflow.csv")
 #For Sunapee
-# myflowgage$area<- 16.9342516 #km2, taken from the Sunapee Lake Area. This is not SUNP watershed area
-# myflowgage$declat<- 43.395
-# myflowgage$declon<- -72.053
+myflowgage$area<- 120.7 #16.9342516 #km2, taken from the Sunapee Lake Area. This is not SUNP watershed area
+myflowgage$declat<- 43.395
+myflowgage$declon<- -72.053
 
 # all_results <- arrow::open_dataset("s3://anonymous@bio230121-bucket01/flare/drivers/met/gefs-v12/stage2?endpoint_override=renc.osn.xsede.org")
 # df <- all_results |> dplyr::collect()
@@ -113,9 +113,7 @@ NLDAS <- arrow::open_dataset(arrow::s3_bucket(paste0("bio230121-bucket01/flare/d
                                    anonymous = TRUE)) |>
   filter(variable %in% c('precipitation_flux', "air_temperature")) |> 
   collect() |> 
-  group_by(datetime, variable) |> 
-  summarise(mean_prediction = mean(prediction)) |> 
-  ungroup() |> 
+  reframe(.by = all_of(c("datetime", "variable")), mean_prediction = mean(prediction)) |> 
   pivot_wider(names_from = 'variable', values_from = 'mean_prediction') |> 
   rename(AirTemp = air_temperature, Rain = precipitation_flux)
 
@@ -232,7 +230,7 @@ soilwetting<-function(AWprev,dP,AWC){
 
 ```{r params and run TMWB model}
 #initialize parameters
-myflowgage$TMWB$AWC=0.13*400 #AWC=.13; 0.12 and 0.16 were the values obtained from USDA web soil survey
+myflowgage$TMWB$AWC=0.13*400 #AWC=.13; 0.12 and 0.16 were the values obtained from USDA web soil survey #avg. water content?
 # z=2000mm --> this one is hard because it really changes Qpred a LOT - calibrate this parameter? trees generally have <3500 mm roots...
 myflowgage$TMWB$dP = 0 # Net precip
 myflowgage$TMWB$ET = 0 # Evapotranspiration
@@ -339,7 +337,7 @@ if (!file.exists("./model_output/inflow_tmwb/")){
 
 #create csv for q export
 QExport<- data.frame("time"=TMWBsol$TMWB$mdate, "Q_m3pd"=TMWBsol$TMWB$Qpred_m3pd)
-write.csv(QExport, "model_output/inflow_tmwb/Flow_calcs_met.csv", row.names = F)
+write.csv(QExport, "Flow_calcs_met.csv", row.names = F)
 
 
 ## MAKE INFLOW FORECAST
@@ -347,7 +345,7 @@ message('Generating Inflow Forecast...')
 source('./model_code/inflow_tmwb/create_inflow_forecast.R')
 source('./model_code/inflow_tmwb/inflow_prep.R')
 
-site = 'bvre'
+site = 'sunp'
 model_name = 'tmwb_inflow'
 
 for (i in seq.Date(as.Date('2025-02-01'), as.Date('2025-03-20'), by = 'days')){
