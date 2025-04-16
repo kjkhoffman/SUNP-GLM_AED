@@ -10,9 +10,6 @@ latitude = 43.395
 longitude = -72.053
 
 Questions: 
-myflowgage$area ~line 100. Should this be the watershed area or the lake area? I took the lake area for Sunapee.
-I need arrow. Can I use arrow in Docker? I'm on an M3 chip now.
-- I need to install the arm64 version of R on this mac!!!
 
 ```{r load packages}
 #packages
