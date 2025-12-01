@@ -16,8 +16,8 @@ When you click the **Render** button a document will be generated that includes 
 library(ggplot2)
 ```
 
-Start with water level. This will plot water level. 
-17 June 2025 - water level is stable at the height of the outflow and is not dropping below that point. 
+Start with water level. This will plot water level. 17 June 2025 - water level is stable at the height of the outflow and is not dropping below that point.
+
 ```{r}
 overflow <- read_csv("~/SUNP-GLM_AED/SNP_GLM_AED/sim/output/lake.csv")
 
@@ -88,9 +88,6 @@ depth = 33.33408
 full_pool = 333.1921
 bottom = full_pool-depth
 ```
-
-
-
 
 ```{r temperature checks}
 
