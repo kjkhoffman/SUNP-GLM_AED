@@ -1,0 +1,176 @@
+qmd to run GLM so that I can see all of the outputs in a nice format
+
+```{r packages}
+#script to run GLM
+library(devtools)
+devtools::install_github("rqthomas/glmtools", force = TRUE)
+devtools::install_github("rqthomas/GLM3r", force = TRUE)
+library(glmtools)
+library(GLM3r)
+library(dplyr)
+library(lubridate)
+```
+
+```{r plot driver data}
+met <- read_csv("~/SUNP-GLM_AED/SNP_GLM_AED/sim/inputs/SunapeeMet_Stage3_2025-05-05.csv")
+
+met %>% pivot_longer(-time, names_to = "variable", values_to = "observation") %>%
+  ggplot(aes(x = time, y = observation)) + geom_point() +
+  facet_wrap(~variable, scales = "free")
+
+# met_old <- read_csv("~/SUNP-GLM_AED/SNP_GLM_AED/sim/inputs/SunapeeMet_1979_2020EST.csv")
+
+# fake_met <- met_old %>% 
+#   mutate(time = time + years(8))
+# write_csv(fake_met, "./sim/inputs/fake_SunapeeMet_2028EST.csv")
+# 
+# met_old %>% 
+#   filter(time > "2000-01-01 00:00:00") %>% 
+#   pivot_longer(-time, names_to = "variable", values_to = "observation") %>%
+#   ggplot(aes(x = time, y = observation)) + geom_point() +
+#   facet_wrap(~variable, scales = "free")
+
+met %>% 
+  filter(time > "2000-01-01 00:00:00") %>%
+  pivot_longer(-time, names_to = "variable", values_to = "observation") %>%
+  ggplot(aes(x = time, y = observation)) + geom_point() +
+  facet_wrap(~variable, scales = "free")
+
+inflow <-  read_csv("~/SUNP-GLM_AED/SNP_GLM_AED/sim/inputs/SunapeeInflowFile2025-04-27.csv")
+
+inflow %>% 
+  ggplot(aes(x = time, y = FLOW)) + geom_point()
+
+outflow <- read_csv("~/SUNP-GLM_AED/SNP_GLM_AED/sim/inputs/OutflowequalsInflow_2025-04-27.csv")
+
+outflow %>% 
+  ggplot(aes(x = time, y = FLOW)) + geom_point()
+
+```
+
+
+```{r wd and folder}
+setwd(here::here())
+sim_folder <- "./SUNP-GLM_AED/SNP_GLM_AED/sim"
+sim_folder <- "./sim"
+```
+
+```{r run GLM, message=FALSE, echo=FALSE, warning=FALSE, max.print=20}
+GLM3r::run_glm(sim_folder = sim_folder,verbose = FALSE)
+```
+
+```{r output folder}
+# nc_file <- file.path('./SUNP-GLM_AED/SNP_GLM_AED/sim/output/output.nc')
+nc_file <- file.path('./sim/output/output.nc')
+```
+
+```{r water level}
+#get water level
+water_level<-get_surface_height(nc_file, ice.rm = TRUE, snow.rm = TRUE)
+plot(water_level$DateTime,water_level$surface_height)
+
+#these ones were not working previously
+lake_level <- glmtools::get_var(nc_file, var_name = "lake_level")
+glmtools::plot_var_nc(nc_file, var_name = "lake_level")
+
+water_balance <- glmtools::get_surface_height(nc_file)
+
+water_balance <- glmtools::get_var(nc_file, var_name = "lake_volume")
+glmtools::plot_var_nc(nc_file, var_name = "lake_volume")
+
+waterlevel <- read_csv("~/SUNP-GLM_AED/SNP_GLM_AED/real_data/SNP_level_2010-Mar2025.csv")
+str(waterlevel)
+waterlevel_m <- waterlevel %>% 
+  rename(elev_ft = "Observed Reservoir Pool Elevation (FT)", datetime = `Datetime (EDT)`) %>% 
+  mutate(elev_m = elev_ft*0.3048) %>% 
+  mutate(height_m = elev_m - 299.43,  #changed from 299.848 to 299.43
+         date = date(datetime)) %>% 
+  group_by(date) %>% 
+  mutate(elev_m = mean(elev_m), 
+         height_m = mean(height_m)) %>% 
+  ungroup() %>% 
+  select(date, height_m) %>% 
+  distinct() %>% 
+  filter(date > "2020-11-01" & date < "2025-03-29")
+
+test <- left_join(lake_level, waterlevel_m, join_by(DateTime == date))
+
+
+
+test %>% 
+  rename(obs = height_m) %>% 
+  pivot_longer(cols = c(lake_level, obs)) %>% 
+  ggplot(aes(x=DateTime, y=value, colour=name)) + geom_point()
+  
+
+depth = 33.33408
+full_pool = 333.1921
+bottom = full_pool-depth #299.85802 here, but model set to 299.43...
+crest_elev = 333.943 #set crest elevation to 333.1921
+#set crest_width to 6m
+bottom + depth
+```
+
+```{r}
+water_level<-get_surface_height(nc_file, ice.rm = TRUE, snow.rm = TRUE)
+plot_var(nc_file, var_name = "tot_inflow_vol")
+inflow_vol <- get_var(nc_file, var_name = "tot_inflow_vol")
+inflow_vol %>% 
+  mutate(tot_inflow_vol_s = tot_inflow_vol/86400) %>% 
+  ggplot(aes(x = DateTime, y = tot_inflow_vol_s)) + geom_point()
+
+outflow_vol <- get_var(nc_file, var_name = "tot_outflow_vol")
+outflow_vol %>% 
+  mutate(tot_outflow_vol_s = tot_outflow_vol/86400) %>% 
+  ggplot(aes(x = DateTime, y = tot_outflow_vol_s)) + geom_point()
+
+
+glmtools::sim_vars(nc_file)
+
+```
+
+
+```{r physical}
+current_temp <- glmtools::get_var(nc_file, var_name = "temp")
+glmtools::plot_var_nc(nc_file, var_name = "temp")
+current_ice <- glmtools::get_var(nc_file, var_name = "white_ice_thickness")
+glmtools::plot_var_nc(nc_file, var_name = "white_ice_thickness")
+current_carbon <- glmtools::get_var(nc_file, var_name = "blue_ice_thickness")
+glmtools::plot_var_nc(nc_file, var_name = "blue_ice_thickness")
+current_snow <- glmtools::get_var(nc_file, var_name = "snow_thickness")
+glmtools::plot_var_nc(nc_file, var_name = "snow_thickness")
+
+glm_temp1m <- glmtools::get_var(
+  file = nc_file,
+  var_name = "temp",
+  reference = "surface",
+  z_out = 1)
+
+glm_temp5m <- glmtools::get_var(
+  file = nc_file,
+  var_name = "temp",
+  reference = "surface",
+  z_out = 5)
+
+glm_temp10m <- glmtools::get_var(
+  file = nc_file,
+  var_name = "temp",
+  reference = "surface",
+  z_out = 10)
+```
+
+```{r chemical}
+
+```
+
+```{r biological}
+current_carbon <- glmtools::get_var(nc_file, var_name = "PHY_cyano")
+glmtools::plot_var_nc(nc_file, var_name = "PHY_cyano")
+current_carbon <- glmtools::get_var(nc_file, var_name = "PHY_diatom")
+glmtools::plot_var_nc(nc_file, var_name = "PHY_diatom")
+current_carbon <- glmtools::get_var(nc_file, var_name = "PHY_tchla")
+glmtools::plot_var_nc(nc_file, var_name = "PHY_tchla")
+
+
+```
+

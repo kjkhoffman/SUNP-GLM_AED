@@ -72,15 +72,24 @@ nuts <- read_csv("inflowchem_TNTPDOC_allstream_01Mar2021.csv")
 
 summary(nuts)
 
+nuts_2000 <- nuts |> 
+  subset(date > "2000-01-01")
+
 nuts <- nuts |> 
   subset(date > "2000-01-01")
 
-nuts |> ggplot(aes(date, TP_mmolm3)) + geom_point()
-nuts |> ggplot(aes(date, TN_mmolm3)) + geom_point()
-nuts |> ggplot(aes(date, DOC_mmolm3)) + geom_point()
+ggplot(nuts, aes(x = date, y = TP_mmolm3)) +
+  geom_point() +
+  facet_wrap(~stream_no)
+
+nuts |> ggplot(aes(yday(date), TP_mmolm3,  color = as.factor(year(date)))) + geom_point()
+#don't really see any seasonality, so probably ok to sample from the full distribution
+nuts |> ggplot(aes(yday(date), TN_mmolm3, color = as.factor(year(date)))) + geom_point()
+nuts |> ggplot(aes(yday(date), DOC_mmolm3, color = as.factor(year(date)))) + geom_point()
+
 ```
 
-```{r bootstrap TP}
+```{r bootstrap TP vis}
 nuts <- read_csv("inflowchem_TNTPDOC_allstream_01Mar2021.csv")
 
 summary(nuts)
@@ -97,7 +106,7 @@ plot(nuts$date, nuts$TN_mmolm3)
 plot(nuts$date, nuts$DOC_mmolm3)
 ```
 
-```{r}
+```{r bootstrap TP}
 require(dplyr); require(lubridate)
 
 nuts <- mutate(nuts, date = ymd(date), year = year(date))
@@ -214,7 +223,160 @@ for(i in 1:nrow(Boot_Inflows)){
 colnames(Boot_Inflows)[1] <- 'Date'
 colnames(Boot_Inflows)[13] <- 'Inflow_all_TP'
 
+inflowprop <- c(0.293, 0.05, 0.0168, 0.0195, 0.024, 0.013, 0.05, 0.011, 0.006, 0.111, 0.013)
+inflowprop[1]
+str(Boot_Inflows_test)
+
+Boot_Inflows_test <- Boot_Inflows |> 
+  mutate_at(c(2:13), as.numeric) |> 
+  mutate(inflow_wsprop_total_TP = (i505_TP * inflowprop[1] + i790_TP * inflowprop[2] + i830_TP * inflowprop[3] + i788_TP * inflowprop[4] + i510_TP * inflowprop[5] + i540_TP * inflowprop[6] + i800_TP * inflowprop[7] + i835_TP* inflowprop[8] + i805_TP * inflowprop[9] + i670_TP* inflowprop[10] + i760_TP * inflowprop[11])) |> 
+  select(c("Date", "inflow_wsprop_total_TP"))
+
 #write.csv(x = Boot_Inflows,file = paste0("Boot_Inflows_", Sys.Date(), ".csv"), row.names = FALSE, quote = FALSE)
+write.csv(x = Boot_Inflows_test,file = paste0("Boot_ONEInflow_", Sys.Date(), ".csv"), row.names = FALSE, quote = FALSE)
+```
+
+```{r}
+alldata <- read.csv('Boot_ONEInflow_2025-04-27.csv')
+
+alldata$date<-as.character(alldata$Date)
+alldata <- alldata |> 
+  mutate(date = ymd(date), 
+         year = year(date)) |> 
+  select(-c(Date))
+
+nuts_2000$NtoP<-nuts_2000$TN_mmolm3/nuts_2000$TP_mmolm3
+hist(nuts_2000$NtoP)
+mu<-mean(nuts_2000$NtoP, na.rm = TRUE)  # Set the mean.
+sigma<-sd(nuts_2000$NtoP, na.rm = TRUE) # Set the standard deviation.
+
+Boot_TP <- alldata
+
+# inflows <- as.numeric(c("505","790","830","788","510","540","800","835","805","670","760"))
+# inflowName <- c("i505", "i790", "i830", "i788","i510","i540","i800","i835","i805","i670","i760")
+
+
+
+NtoP <- NA*numeric(length=nrow(Boot_TP))
+n = 1000       # Number of random numbers to use.
+j = 1
+i = 1
+
+for (i in 1:length(inflows)){
+  for(j in 1:nrow(Boot_TP)){
+    
+    randNorm <- rnorm(n, mu, sigma) # Use rnorm function to generate random numbers from N:P distribution.
+    TN_iteration <- Boot_TP[j, 2 + i] * randNorm[min(which(randNorm > 0))]
+    NtoP[j] <- TN_iteration
+  }
+title <- paste(inflowName[i], "_TN", sep="")
+assign(title, NtoP)
+}
+
+NtoP_Inflows <- as.data.frame(cbind(Boot_TP,NtoP))
+
+#NtoP_Inflows$V1 <- as.Date(NtoP_Inflows$V1)
+
+#write.csv(x = NtoP_Inflows,file = paste0("./data/individual_inflows/TN_TP_Inflow_conc_boot_", Sys.Date(), ".csv"), row.names = FALSE, quote = FALSE)
+```
+
+
+```{r format inflow file for GLM-AED and add N}
+#these proportions are based on what Nicole was using. 
+NtoP_Inflows_test <- NtoP_Inflows |> 
+  mutate(PHS_ads = inflow_wsprop_total_TP * 0.5, 
+         PHS_frp = inflow_wsprop_total_TP * 0.0295, 
+         OGM_pop = inflow_wsprop_total_TP * 0.327, 
+         OGM_dop = inflow_wsprop_total_TP * 0.1435) |> 
+  mutate(NIT_nit = inflow_wsprop_total_TP * 0.1, 
+         NIT_amm = inflow_wsprop_total_TP * 0.1,
+         OGM_pon = inflow_wsprop_total_TP * 0.4, 
+         OGM_don = inflow_wsprop_total_TP * 0.4)
+
+# write.csv(x = NtoP_Inflows_fracNP,file = paste0("./data/individual_inflows/TN_TP_Inflow_conc_fracNP_boot_", Sys.Date(), ".csv"),
+#           row.names = FALSE, quote = FALSE)
+# write.csv(x = NtoP_Inflows_test,file = paste0("TN_TP_Inflow_conc_fracNP_boot_", Sys.Date(), ".csv"), row.names = FALSE, quote = FALSE)
+```
+
+```{r add DOC, SALT and POC}
+
+INFLOW <- NtoP_Inflows_test |> 
+  mutate(OGM_doc = 125, 
+         OGM_poc = 12.5, 
+         SALT = 0)
+```
+
+```{r TEMP for inflow}
+#this endpoint has been updated, none of the others have been updated yet, all other attempts to open a pickle bucket in the sky will fail as of 4/27/25 2pm.
+
+#I really don't like how temperature is calculated here, but we're going to just keep going
+
+flow_site = "sunp"
+noaa_met <- arrow::open_dataset(arrow::s3_bucket(paste0("bio230121-bucket01/flare/drivers/met/gefs-v12/stage3/site_id=",flow_site),
+                                   endpoint_override = "https://amnh1.osn.mghpcc.org",
+                                   anonymous = TRUE)) |>
+  filter(variable %in% c("air_temperature")) |> 
+  collect() |> 
+  reframe(.by = all_of(c("datetime", "variable")), mean_prediction = mean(prediction)) |> 
+  pivot_wider(names_from = 'variable', values_from = 'mean_prediction') |> 
+  rename(AirTemp = air_temperature) |> 
+  mutate(AirTemp = AirTemp - 273.15)
+
+noaa_met_daily <- noaa_met |> 
+  group_by(date(datetime)) |> 
+  mutate(TEMP = mean(AirTemp),
+         AirTemp = mean(AirTemp),
+         date = date(datetime)) |> 
+  ungroup() |> 
+  select(TEMP, AirTemp, date) |> 
+  distinct()
+
+curr_met_daily <- noaa_met_daily |>
+      dplyr::mutate(mdate = lubridate::as_date(date)) |> 
+      dplyr::mutate(TEMP = NA) |> 
+      dplyr::select(-date) |>
+  mutate(AirTemp = ifelse(AirTemp < 0, 0, AirTemp)) |> 
+  mutate(AirTemp_lag1 = lag(AirTemp, n = 1))
+  
+
+
+
+    curr_met_daily$TEMP[1] <- curr_met_daily$AirTemp[1]  #pulled coeffs from old config file - should actually calculate these for bvr (not fcr)
+ for(i in 2:nrow(curr_met_daily)){                                                  
+      curr_met_daily$TEMP[i] = 0.20291 +
+        (0.94214 * curr_met_daily$AirTemp[i-1]) +
+        (0.04278 * curr_met_daily$AirTemp_lag1[i]) + 0.943
+      output = curr_met_daily
+      
+    }
+
+```
+
+```{r add flow and TEMP to the inflow file}
+flow <- read_csv("Flow_calcs_met.csv") #1654
+flow <- flow |> 
+  mutate(Q_m3ps = Q_m3pd * 0.0000115741, 
+         plus_baseflow = Q_m3ps + 1.864718) |> 
+  select(time, plus_baseflow)
+
+TEMP <- curr_met_daily |> 
+  select(TEMP, mdate) |> 
+  filter(mdate < "2025-04-14")
+
+NtoP_Inflows_test <- INFLOW |> 
+  select(-c(inflow_wsprop_total_TP, year))
+
+test <- left_join(flow, TEMP, join_by("time" == "mdate"))
+test2 <- left_join(test, NtoP_Inflows_test, join_by("time" == "date"))
+
+Inflow_file <- test2 |> 
+  rename(FLOW = plus_baseflow) |> 
+  select(time, FLOW, SALT, TEMP, OGM_doc, OGM_poc, OGM_don, NIT_nit, NIT_amm, OGM_pon, PHS_frp, OGM_dop, OGM_pop)
+
+colSums(is.na(Inflow_file))
+
+write.csv(x = Inflow_file,file = paste0("SunapeeInflowFile", Sys.Date(), ".csv"), row.names = FALSE, quote = FALSE)
+
 ```
 
 

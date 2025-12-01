@@ -1,6 +1,6 @@
 #script to run GLM
-#library(devtools)
-#devtools::install_github("rqthomas/glmtools", force = TRUE)
+library(devtools)
+devtools::install_github("rqthomas/glmtools", force = TRUE)
 #devtools::install_github("rqthomas/GLM3r", force = TRUE)
 library(glmtools)
 library(GLM3r)

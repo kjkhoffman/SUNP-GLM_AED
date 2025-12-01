@@ -16,16 +16,91 @@ When you click the **Render** button a document will be generated that includes 
 library(ggplot2)
 ```
 
-You can add options to executable code like this
+Start with water level. This will plot water level. 
+17 June 2025 - water level is stable at the height of the outflow and is not dropping below that point. 
+```{r}
+overflow <- read_csv("~/SUNP-GLM_AED/SNP_GLM_AED/sim/output/lake.csv")
+
+overflow %>%
+  ggplot(aes(x = time, y = `Overflow Vol`))+
+  geom_point() +
+  geom_point(aes(x = time, y = `Tot Inflow Vol`), color = "blue")#m3 per day?
+
+```
+
+```{r water level}
+#get water level
+water_level<-get_surface_height(nc_file, ice.rm = TRUE, snow.rm = TRUE)
+plot(water_level$DateTime,water_level$surface_height)
+
+#these ones were not working previously
+lake_level <- glmtools::get_var(nc_file, var_name = "lake_level")
+glmtools::plot_var_nc(nc_file, var_name = "lake_level")
+
+water_balance <- glmtools::get_surface_height(nc_file)
+
+water_balance <- glmtools::get_var(nc_file, var_name = "lake_volume")
+glmtools::plot_var_nc(nc_file, var_name = "lake_volume")
+
+waterlevel <- read_csv("~/SUNP-GLM_AED/SNP_GLM_AED/real_data/SNP_level_2010-Mar2025.csv")
+str(waterlevel)
+# waterlevel_m <- waterlevel %>% 
+#   rename(elev_ft = "Observed Reservoir Pool Elevation (FT)", datetime = `Datetime (EDT)`) %>% 
+#   mutate(elev_m = elev_ft*0.3048) %>% 
+#   mutate(height_m = elev_m - 299.858, 
+#          date = date(datetime)) %>% 
+#   group_by(date) %>% 
+#   mutate(elev_m = mean(elev_m), 
+#          height_m = mean(height_m)) %>% 
+#   ungroup() %>% 
+#   select(date, height_m) %>% 
+#   distinct() %>% 
+#   filter(date > "2020-11-01" & date < "2025-03-29")
+
+waterlevel <- read_csv("~/SUNP-GLM_AED/SNP_GLM_AED/real_data/SNP_level_2010-Mar2025.csv")
+str(waterlevel)
+waterlevel_m <- waterlevel %>% 
+  rename(elev_ft = "Observed Reservoir Pool Elevation (FT)", datetime = `Datetime (EDT)`) %>% 
+  mutate(elev_m = elev_ft*0.3048) %>% 
+  mutate(height_m = elev_m - 299.43,  #changed from 299.848 to 299.43
+         date = date(datetime)) %>% 
+  group_by(date) %>% 
+  mutate(elev_m = mean(elev_m), 
+         height_m = mean(height_m)) %>% 
+  ungroup() %>% 
+  select(date, height_m) %>% 
+  distinct() %>% 
+  filter(date > "2020-11-01" & date < "2025-03-29")
+
+test <- left_join(lake_level, waterlevel_m, join_by(DateTime == date))
+
+
+
+test %>% 
+  rename(obs = height_m) %>% 
+  pivot_longer(cols = c(lake_level, obs)) %>% 
+  ggplot(aes(x=DateTime, y=value, colour=name)) + 
+  geom_point() + theme_bw() + 
+  labs(y = "Water Level")
+  
+
+depth = 33.33408
+full_pool = 333.1921
+bottom = full_pool-depth
+```
+
+
+
 
 ```{r temperature checks}
 
 #get just the 1m field data:
-#historical <- read.csv("./field_data/historicalbuoytemp.csv")
-temp0p5m_daily <- read.csv("./field_data/temp0p5m_daily.csv")
-temp5.5m_daily <- read.csv("./field_data/temp5.5m_daily.csv")
-temp9.5m_daily <- read.csv("./field_data/temp9.5m_daily.csv")
-temp1m_daily <- read.csv("./field_data/temp1m_daily.csv")
+#this is all old, pre 2017
+# historical <- read.csv("./field_data/historicalbuoytemp.csv")
+# temp0p5m_daily <- read.csv("~/SUNP-GLM_AED/field_data/temp0p5m_daily.csv")
+# temp5.5m_daily <- read.csv("./field_data/temp5.5m_daily.csv")
+# temp9.5m_daily <- read.csv("./field_data/temp9.5m_daily.csv")
+# temp1m_daily <- read.csv("./field_data/temp1m_daily.csv")
 # temp_1m_exact <- historical %>% filter(depth == 1)
 
 # temp_1m_exact_daily <- temp1m_daily %>% 
@@ -92,63 +167,105 @@ temp1m_daily <- read.csv("./field_data/temp1m_daily.csv")
 # write.csv(temp_5.5m_exact_daily, "./field_data/temp5.5m_daily.csv")
 # write.csv(temp_0p5m_exact_daily, "./field_data/temp0p5m_daily.csv")
 # write.csv(temp_9.5m_exact_daily, "./field_data/temp9.5m_daily.csv")
+temp1m_daily <- read.csv("~/SUNP-GLM_AED/field_data/temp1m.csv")
 
+temp1m_daily <- temp1m_daily %>% 
+  mutate(day = date(DateTime)) %>%
+  group_by(day) %>%
+  mutate(daily_mean_temp_1 = mean(temperature)) %>%
+  select(day, daily_mean_temp_1) %>% 
+  unique()
+temp5m_daily <- read.csv("~/SUNP-GLM_AED/field_data/temp5m.csv")
+temp5m_daily <- temp5m_daily %>% 
+  mutate(day = date(DateTime)) %>%
+  group_by(day) %>%
+  mutate(daily_mean_temp_5 = mean(temperature)) %>%
+  select(day, daily_mean_temp_5) %>% 
+  unique()
+
+temp10m_daily <- read.csv("~/SUNP-GLM_AED/field_data/temp10m.csv")
+temp10m_daily <- temp10m_daily %>% 
+  mutate(day = date(DateTime)) %>%
+  group_by(day) %>%
+  mutate(daily_mean_temp_10 = mean(temperature)) %>%
+  select(day, daily_mean_temp_10) %>% 
+  unique()
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed).
 
 ```{r pretty figures}
-temp1m_daily$DateTime <- as.POSIXct(temp1m_daily$DateTime)
+temp1m_daily$day <- as.POSIXct(temp1m_daily$day)
+temp5m_daily$day <- as.POSIXct(temp5m_daily$day)
+temp10m_daily$day <- as.POSIXct(temp10m_daily$day)
 
 ggplot(glm_temp1m, aes(x= DateTime, y = temp_1)) + geom_line(color = "black", linewidth = 1) + 
-  geom_point(data = temp1m_daily, color = "red", alpha = 0.3) #+ scale_x_date(date_labels = "%b-%d-%Y")
+  geom_point(data = temp1m_daily, aes(x = day, y = daily_mean_temp_1), color = "red") + #scale_x_date(date_labels = "%b-%d-%Y") +
+  labs(y = "temp at 1m")
 
-temp0p5m_daily$DateTime <- as.POSIXct(temp0p5m_daily$DateTime)
+ggplot(glm_temp5m, aes(x= DateTime, y = temp_5)) + geom_line(color = "black", linewidth = 1) + 
+  geom_point(data = temp5m_daily, aes(x = day, y = daily_mean_temp_5), color = "red") + #scale_x_date(date_labels = "%b-%d-%Y") + 
+labs(y = "temp at 5m")
 
-ggplot(glm_temp0p5m, aes(x= DateTime, y = temp_0.5)) + geom_line(color = "black", linewidth = 1) + 
-  geom_point(data = temp0p5m_daily, color = "red", alpha = 0.2)
+ggplot(glm_temp10m, aes(x= DateTime, y = temp_10)) + geom_line(color = "black", linewidth = 1) + 
+  geom_point(data = temp10m_daily, aes(x = day, y = daily_mean_temp_10), color = "red", size = 0.5) + #scale_x_date(date_labels = "%b-%d-%Y") + 
+labs(y = "temp at 10m")
 
-
-temp5.5m_daily$DateTime <- as.POSIXct(temp5.5m_daily$DateTime)
-
-ggplot(glm_temp5.5m, aes(x= DateTime, y = temp_5.5)) + geom_line(color = "black", linewidth = 1) + 
-  geom_point(data = temp5.5m_daily, color = "red", alpha = 0.2)
-
-temp9.5m_daily$DateTime <- as.POSIXct(temp9.5m_daily$DateTime)
-ggplot(glm_temp9.5m, aes(x= DateTime, y = temp_9.5)) + geom_line(color = "black", linewidth = 1) + 
-  geom_point(data = temp9.5m_daily, color = "red", alpha = 0.2)
+# temp0p5m_daily$DateTime <- as.POSIXct(temp0p5m_daily$DateTime)
+# 
+# ggplot(glm_temp0p5m, aes(x= DateTime, y = temp_0.5)) + geom_line(color = "black", linewidth = 1) + 
+#   geom_point(data = temp0p5m_daily, color = "red", alpha = 0.2)
+# 
+# 
+# temp5.5m_daily$DateTime <- as.POSIXct(temp5.5m_daily$DateTime)
+# 
+# ggplot(glm_temp5.5m, aes(x= DateTime, y = temp_5.5)) + geom_line(color = "black", linewidth = 1) + 
+#   geom_point(data = temp5.5m_daily, color = "red", alpha = 0.2)
+# 
+# temp9.5m_daily$DateTime <- as.POSIXct(temp9.5m_daily$DateTime)
+# ggplot(glm_temp9.5m, aes(x= DateTime, y = temp_9.5)) + geom_line(color = "black", linewidth = 1) + 
+#   geom_point(data = temp9.5m_daily, color = "red", alpha = 0.2)
 
 
 ```
 
 ```{r temp RMSE}
 
+temp1m_daily <- temp1m_daily %>% 
+  mutate(DateTime = day)
 m1_comp <- left_join(glm_temp1m, temp1m_daily, by = c('DateTime')) %>% 
-  filter(DateTime > "2008-01-01 00:00:00")
+  filter(DateTime > "2021-01-01 00:00:00")
 
-rmse_1 <- m1_comp %>% mutate(sqer = (temp_1.x - temp_1.y)^2) %>% 
+rmse_1 <- m1_comp %>% mutate(sqer = (temp_1 - daily_mean_temp_1)^2) %>% 
 summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
 
-m0p5_comp <- left_join(glm_temp0p5m, temp0p5m_daily, by = c('DateTime')) %>% 
-  filter(DateTime > "2008-01-01 00:00:00")
+# m0p5_comp <- left_join(glm_temp0p5m, temp0p5m_daily, by = c('DateTime')) %>% 
+#   filter(DateTime > "2008-01-01 00:00:00")
+# 
+# rmse_0p5 <- m0p5_comp %>% mutate(sqer = (temp_0.5.x - temp_0.5.y)^2) %>% 
+# summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
 
-rmse_0p5 <- m0p5_comp %>% mutate(sqer = (temp_0.5.x - temp_0.5.y)^2) %>% 
+temp5m_daily <- temp5m_daily %>% 
+  mutate(DateTime = day)
+m5_comp <- left_join(glm_temp5m, temp5m_daily, by = c('DateTime')) %>% 
+  filter(DateTime > "2021-01-01 00:00:00")
+
+rmse_5 <- m5_comp %>% mutate(sqer = (temp_5 - daily_mean_temp_5)^2) %>% 
 summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
 
-m5.5_comp <- left_join(glm_temp5.5m, temp5.5m_daily, by = c('DateTime')) %>% 
-  filter(DateTime > "2008-01-01 00:00:00")
+temp10m_daily <- temp10m_daily %>% 
+  mutate(DateTime = day)
+m10_comp <- left_join(glm_temp10m, temp10m_daily, by = c('DateTime')) %>% 
+  filter(DateTime > "2021-01-01 00:00:00")
 
-rmse_5.5 <- m5.5_comp %>% mutate(sqer = (temp_5.5.x - temp_5.5.y)^2) %>% 
-summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
-
-m9.5_comp <- left_join(glm_temp9.5m, temp9.5m_daily, by = c('DateTime')) %>% 
-  filter(DateTime > "2008-01-01 00:00:00")
-
-rmse_9.5 <- m9.5_comp %>% mutate(sqer = (temp_9.5.x - temp_9.5.y)^2) %>% 
+rmse_10 <- m10_comp %>% mutate(sqer = (temp_10 - daily_mean_temp_10)^2) %>% 
 summarise(mean((sqer), na.rm = TRUE)) %>% sqrt()
 
 print(rmse_1)
-print(rmse_0p5)
-print(rmse_5.5)
-print(rmse_9.5)
+#print(rmse_0p5)
+print(rmse_5)
+print(rmse_10)
+
+cat(sprintf("RMSE \n 1m: %.2f \n 5m: %.2f \n 10m: %.2f", rmse_1, rmse_5, rmse_10)) 
+
 ```

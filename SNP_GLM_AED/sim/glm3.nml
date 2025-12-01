@@ -24,7 +24,7 @@
    light_extc = 1, 0.5, 2, 4
    energy_frac = 0.51, 0.45, 0.035, 0.005
    Benthic_Imin = 10
-   Kw = 0.5!0.4!0.5!0.95!0.2! will need to be higher? FCR kw is 0.9
+   Kw = 0.2!0.4!0.5!0.95!0.2! WW had 0.2. will need to be higher? FCR kw is 0.9 !
 /
 &mixing
    coef_mix_conv = 0.2
@@ -42,7 +42,7 @@
    bsn_len = 12870
    bsn_wid = 3000
    bsn_vals = 82
-   crest_elev = 333.943
+   crest_elev = 333.1!333.192! is full pool! 333.943
    H = 299.43, 299.943, 300.443, 300.943, 301.443, 301.943, 302.443, 302.943, 303.443, 303.943, 
    304.443, 304.943, 305.443, 305.943, 306.443, 306.943, 307.443, 307.943, 308.443, 308.943, 
    309.443, 309.943, 310.443, 310.943, 311.443, 311.943, 312.443, 312.943, 313.443, 313.943, 
@@ -66,8 +66,8 @@
 /
 &time
    timefmt = 2
-   start = '2008-01-01 00:00:00'
-   stop = '2008-03-28 00:00:00'
+   start = '2020-11-01 00:00:00'
+   stop = '2024-03-28 00:00:00'
    dt = 3600
    num_days = 1
    timezone = -5
@@ -81,6 +81,7 @@
    csv_point_at = 1
    csv_point_nvars = 1
    csv_point_vars = 'temp'
+   csv_ovrflw_fname = 'overflow'
 /
 &init_profiles
    lake_depth = 33.33408
@@ -109,11 +110,11 @@
    rad_mode = 1
    albedo_mode = 1
    cloud_mode = 4
-   meteo_fl = 'inputs/SunapeeMet_1979_2020EST.csv'
+   meteo_fl = 'inputs/SunapeeMet_Stage3_2025-05-05.csv'
    subdaily = .true.
    wind_factor = 1
    sw_factor = 1!
-   lw_factor = 1!
+   lw_factor = 1
    at_factor = 1
    rh_factor = 1
    rain_factor = 1
@@ -130,23 +131,24 @@
    strm_hf_angle = 55 !, 55, -15          !I need to decide if I want one or 2 inflows
    strmbd_slope = 0.05 !, 0.05, 15        !And I need to figure out what the streambed slope for these are
    strmbd_drag = 0.03 !, 0.016, 1.2       !And drag, and inflow factor. 
-   inflow_factor = 1 !, 1, 0.2            !These should all be based on how much each contributes
-   inflow_fl =  'inputs/oneInflow_14Jun19_2.csv'  !Let's start with just the one inflow from Nicole to see if we can get it going
+   inflow_factor = 1!0.5!1 !, 1, 0.2            !These should all be based on how much each contributes
+   inflow_fl =  'inputs/SunapeeInflowFile2025-04-27.csv'  !Let's start with just the one inflow from Nicole to see if we can get it going
    inflow_varnum = 12
    inflow_vars =  'FLOW','SALT','TEMP','OGM_doc','OGM_poc','OGM_don','NIT_nit','NIT_amm','OGM_pon','PHS_frp','OGM_dop','OGM_pop'
    !Cayelan's list of inflow solutes 'FLOW','TEMP','SALT','OXY_oxy','NIT_amm','NIT_nit','PHS_frp','OGM_doc','OGM_docr','OGM_poc','OGM_don','OGM_donr','OGM_pon','OGM_dop','OGM_dopr','OGM_pop','CAR_dic','CAR_ch4','SIL_rsi'
 /
 &outflow
-   !num_outlet = 0
-   num_outlet = 1! need outflow data and outflow name and factor > go to CCC .nml for FCR
+   num_outlet = 0 !do this to not forecast outflow, this will 
+   !num_outlet = 1! need outflow data and outflow name and factor > go to CCC .nml for FCR
    flt_off_sw = .false.    !these are also all pulled from CCC's FCR .nml file. 
-   outl_elvs = 332.3143
-   outflow_factor = 1
-   outlet_type = 1
-   outflow_fl = 'inputs/corr_outflow_impmodel_baseflow_23Mar2017.csv'
+   outl_elvs = 332.3143 !crest elev = 333.943!changed crest elev to 333.192
+   outflow_factor = 0! will need to set either this or num_outlet to 0, normally 1
+   outlet_type = 1 !surface outflow, we think
+   outflow_fl = 'inputs/OutflowequalsInflow_2025-04-27.csv' !could use Sugar River 
+   !outflow here. In forecast period assume outflow = inflow
    !seepage = .true.
    !seepage_rate = 0.001
-   crest_width = 3 !3m wide?
+   crest_width = 6 !3m wide?! KKH needs to check with Geoff - reach out to NH Dam Bureau
    crest_factor = 1
    !bsn_len_outl = 711.699
    !bsn_wid_outl = 226.03
@@ -163,8 +165,8 @@
    benthic_mode = 2
    sed_heat_model = 1
    n_zones = 3
-   zone_heights = 15, 28, 35!15, 27, 35!15, 23, 35 ! height above bottom, last should be above water surface, probably want the second zone closer to the thermocline depth
-   sed_temp_mean = 3, 6, 12
+   zone_heights = 15, 28, 36!15, 28, 35!15, 27, 35!15, 23, 35 ! height above bottom, last should be above water surface, probably want the second zone closer to the thermocline depth
+   sed_temp_mean = 6, 8, 12 ! this looked decent, FLARE between 5 and 15 for first sed temp!3, 6, 12 !from Whitney
    sed_temp_depth = 0.5, 0.5, 0.5
    sed_temp_amplitude = 0, 0, 0
    sed_temp_peak_doy = 242.5, 242.5, 242.5

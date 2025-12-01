@@ -96,5 +96,66 @@ snp_level %>%
   ggplot(aes(x = datetime, y = level_m)) + geom_point()
 ```
 
+```{r get the met data}
+site = "sunp"
+noaa_met <- arrow::open_dataset(arrow::s3_bucket(paste0("bio230121-bucket01/flare/drivers/met/gefs-v12/stage3/site_id=", site),
+                                   endpoint_override = "https://amnh1.osn.mghpcc.org",
+                                   anonymous = TRUE)) |>
+  #filter(variable %in% c("air_temperature", "precipitation_flux")) |> 
+  collect() |> 
+  reframe(.by = all_of(c("datetime", "variable")), mean_prediction = mean(prediction)) |> 
+  pivot_wider(names_from = 'variable', values_from = 'mean_prediction') |> 
+  rename(AirTemp = air_temperature) |> 
+  mutate(AirTemp = AirTemp - 273.15)
 
+noaa_met_2 <- noaa_met |> 
+  mutate(WindSpeed = sqrt(eastward_wind^2 + northward_wind^2)) |> 
+  #group_by(date(datetime)) |> 
+  mutate(ShortWave = (surface_downwelling_shortwave_flux_in_air), LongWave = (surface_downwelling_longwave_flux_in_air), AirTemp = (AirTemp), RelHum = (relative_humidity * 100), WindSpeed = (WindSpeed), Rain = sum(precipitation_flux)) |> 
+  mutate(time = datetime) |> 
+  mutate(RelHum = ifelse(RelHum > 100, 100, RelHum)) %>% 
+ # ungroup() |>
+  select(time, ShortWave, LongWave, AirTemp, RelHum, WindSpeed, Rain) |> 
+  distinct()
+
+write.csv(x = noaa_met_2,file = paste0("SunapeeMet_Stage3_", Sys.Date(), ".csv"), row.names = FALSE, quote = FALSE)
+```
+
+```{r get met data based on FLARE code}
+
+```
+
+
+
+```{r outflow}
+#using the inflow as the outflow for now
+#this comes from InflowPrep.qmd, but being lazy
+
+outflow <- Inflow_file |> 
+  select(time, FLOW)
+
+write.csv(x = outflow,file = paste0("OutflowequalsInflow_", Sys.Date(), ".csv"), row.names = FALSE, quote = FALSE)
+
+outflow <- read_csv("~/SUNP-GLM_AED/InflowsSGR/SugarOutflow.csv")
+
+outflow %>%
+  mutate(discharge_m3s = discharge_cfs * 0.028316847) %>% 
+  ggplot(aes(x = date, y = discharge_m3s)) + geom_point()
+
+```
+
+need to pull from git ideally
+
+```{r get buoy data}
+
+
+# headers = read.csv("~/GitHubRepos/CareyLabVT/SUNP-phytocasts/Data/SUNP_buoy_wq.csv", skip = 1, header = F, nrows = 1, as.is = T)
+# df = read.csv("~/GitHubRepos/CareyLabVT/SUNP-phytocasts/Data/SUNP_buoy_wq.csv", skip = 4, header = F)
+# colnames(df)= headers
+# # headers = read.csv("~/GitHubRepos/CareyLabVT/SUNP-phytocasts/Data/temp1m.csv", skip = 0, header = F, nrows = 1, as.is = T)
+# # df = read.csv("~/GitHubRepos/CareyLabVT/SUNP-phytocasts/Data/temp1m.csv", skip = 1, header = F)
+# # colnames(df)= headers
+# oldbuoy <- df
+
+```
 
